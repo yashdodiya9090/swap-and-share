@@ -1,7 +1,7 @@
 const express = require('express');
 const Book = require('../models/Book');
 const authMiddleware = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const { upload, cloudinary } = require('../middleware/cloudinary');
 
 const router = express.Router();
 
@@ -33,11 +33,8 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     if (!title || !description)
       return res.status(400).json({ message: 'Title and description are required' });
 
-    let image = null;
-    if (req.file) {
-      const base64Image = req.file.buffer.toString('base64');
-      image = `data:${req.file.mimetype};base64,${base64Image}`;
-    }
+    // Cloudinary gives us req.file.path as the secure URL
+    const image = req.file ? req.file.path : null;
 
     const book = new Book({
       title,
@@ -67,9 +64,14 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
     const { title, description } = req.body;
     if (title) book.title = title;
     if (description) book.description = description;
+
     if (req.file) {
-      const base64Image = req.file.buffer.toString('base64');
-      book.image = `data:${req.file.mimetype};base64,${base64Image}`;
+      // Delete old image from Cloudinary if it exists
+      if (book.image) {
+        const publicId = book.image.split('/').slice(-2).join('/').split('.')[0];
+        await cloudinary.uploader.destroy(publicId).catch(() => {});
+      }
+      book.image = req.file.path;
     }
 
     await book.save();
@@ -86,6 +88,12 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!book) return res.status(404).json({ message: 'Book not found' });
     if (book.owner.toString() !== req.user.id)
       return res.status(403).json({ message: 'Not authorized to delete this book' });
+
+    // Delete image from Cloudinary
+    if (book.image) {
+      const publicId = book.image.split('/').slice(-2).join('/').split('.')[0];
+      await cloudinary.uploader.destroy(publicId).catch(() => {});
+    }
 
     await book.deleteOne();
     res.json({ message: 'Book deleted successfully' });

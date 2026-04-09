@@ -1,7 +1,7 @@
 const express = require('express');
 const Game = require('../models/Game');
 const authMiddleware = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const { upload, cloudinary } = require('../middleware/cloudinary');
 
 const router = express.Router();
 
@@ -33,11 +33,8 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     if (!title || !description)
       return res.status(400).json({ message: 'Title and description are required' });
 
-    let image = null;
-    if (req.file) {
-      const base64Image = req.file.buffer.toString('base64');
-      image = `data:${req.file.mimetype};base64,${base64Image}`;
-    }
+    // Cloudinary gives us req.file.path as the secure URL
+    const image = req.file ? req.file.path : null;
 
     const game = new Game({
       title,
@@ -67,9 +64,14 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
     const { title, description } = req.body;
     if (title) game.title = title;
     if (description) game.description = description;
+
     if (req.file) {
-      const base64Image = req.file.buffer.toString('base64');
-      game.image = `data:${req.file.mimetype};base64,${base64Image}`;
+      // Delete old image from Cloudinary if it exists
+      if (game.image) {
+        const publicId = game.image.split('/').slice(-2).join('/').split('.')[0];
+        await cloudinary.uploader.destroy(publicId).catch(() => {});
+      }
+      game.image = req.file.path;
     }
 
     await game.save();
@@ -86,6 +88,12 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!game) return res.status(404).json({ message: 'Game not found' });
     if (game.owner.toString() !== req.user.id)
       return res.status(403).json({ message: 'Not authorized to delete this game' });
+
+    // Delete image from Cloudinary
+    if (game.image) {
+      const publicId = game.image.split('/').slice(-2).join('/').split('.')[0];
+      await cloudinary.uploader.destroy(publicId).catch(() => {});
+    }
 
     await game.deleteOne();
     res.json({ message: 'Game deleted successfully' });
