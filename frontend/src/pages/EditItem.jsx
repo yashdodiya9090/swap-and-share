@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api, { UPLOADS_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const EditItem = () => {
@@ -21,7 +21,7 @@ const EditItem = () => {
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const { data } = await axios.get(`/api/${type}s/${id}`);
+        const { data } = await api.get(`/api/${type}s/${id}`);
         // Check ownership
         if (data.owner !== user?.id) {
           navigate('/products');
@@ -74,7 +74,7 @@ const EditItem = () => {
       formData.append('description', form.description.trim());
       if (newImage) formData.append('image', newImage);
 
-      await axios.put(`/api/${type}s/${id}`, formData, {
+      await api.put(`/api/${type}s/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -97,7 +97,7 @@ const EditItem = () => {
     );
   }
 
-  const currentImg = preview || (existingImage ? `/uploads/${existingImage}` : null);
+  const currentImg = preview || (existingImage ? `${UPLOADS_URL}${existingImage}` : null);
 
   return (
     <div className="edit-item-page">

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const AddItem = () => {
@@ -53,7 +53,7 @@ const AddItem = () => {
       if (image) formData.append('image', image);
 
       const endpoint = form.category === 'book' ? '/api/books' : '/api/games';
-      await axios.post(endpoint, formData, {
+      await api.post(endpoint, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

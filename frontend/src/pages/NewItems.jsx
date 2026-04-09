@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api, { UPLOADS_URL } from '../api';
 
 const NewItems = () => {
   const [items, setItems] = useState([]);
@@ -10,8 +10,8 @@ const NewItems = () => {
     const fetchNew = async () => {
       try {
         const [bRes, gRes] = await Promise.all([
-          axios.get('/api/books'),
-          axios.get('/api/games'),
+          api.get('/api/books'),
+          api.get('/api/games'),
         ]);
         const allItems = [
           ...bRes.data.map(b => ({ ...b, _type: 'book' })),
@@ -77,7 +77,7 @@ const NewItems = () => {
         ) : (
           <div className="ni-grid">
             {items.map(item => {
-              const imgSrc = item.image ? `/uploads/${item.image}` : null;
+              const imgSrc = item.image ? `${UPLOADS_URL}${item.image}` : null;
               return (
                 <div key={item._id} className="ni-card glass-card">
                   <div className="ni-card-img-wrap">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api, { UPLOADS_URL } from '../api';
 
 const Home = () => {
   const [featuredBooks, setFeaturedBooks] = useState([]);
@@ -12,9 +12,9 @@ const Home = () => {
     const fetchFeatured = async () => {
       try {
         const [bRes, gRes, sRes] = await Promise.all([
-          axios.get('/api/books'),
-          axios.get('/api/games'),
-          axios.get('/api/stats'),
+          api.get('/api/books'),
+          api.get('/api/games'),
+          api.get('/api/stats'),
         ]);
         setFeaturedBooks(bRes.data.slice(0, 3));
         setFeaturedGames(gRes.data.slice(0, 3));
@@ -323,7 +323,7 @@ const Home = () => {
 
 // Mini item card for homepage
 const ItemCard = ({ item, type }) => {
-  const imgSrc = item.image ? `/uploads/${item.image}` : null;
+  const imgSrc = item.image ? `${UPLOADS_URL}${item.image}` : null;
   return (
     <div className="item-card">
       {imgSrc ? (

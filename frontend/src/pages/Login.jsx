@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 
@@ -25,7 +25,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.post('/api/auth/google', {
+      const { data } = await api.post('/api/auth/google', {
         idToken: credentialResponse.credential
       });
 
@@ -49,7 +49,7 @@ const Login = () => {
     
     setLoading(true);
     try {
-      const { data } = await axios.post('/api/auth/google', {
+      const { data } = await api.post('/api/auth/google', {
         idToken: googleData.idToken,
         mobile
       });
@@ -72,7 +72,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.post('/api/auth/login', form);
+      const { data } = await api.post('/api/auth/login', form);
       login(data.token, data.user);
       navigate('/');
     } catch (err) {

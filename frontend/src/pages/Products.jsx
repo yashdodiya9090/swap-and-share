@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api, { UPLOADS_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const Products = () => {
@@ -18,8 +18,8 @@ const Products = () => {
     setLoading(true);
     try {
       const [bRes, gRes] = await Promise.all([
-        axios.get('/api/books'),
-        axios.get('/api/games'),
+        api.get('/api/books'),
+        api.get('/api/games'),
       ]);
       setBooks(bRes.data);
       setGames(gRes.data);
@@ -41,7 +41,7 @@ const Products = () => {
     if (!window.confirm(`Delete this ${type}?`)) return;
     setDeleteLoading(id);
     try {
-      await axios.delete(`/api/${type}s/${id}`, {
+      await api.delete(`/api/${type}s/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (type === 'book') setBooks(prev => prev.filter(b => b._id !== id));
@@ -214,7 +214,7 @@ const ItemGrid = ({ items, user, onDelete, deleteLoading, navigate }) => {
     <div className="items-grid">
       {items.map(item => {
         const type = item._type;
-        const imgSrc = item.image ? `/uploads/${item.image}` : null;
+        const imgSrc = item.image ? `${UPLOADS_URL}${item.image}` : null;
         const isOwner = user && user.id === item.owner;
 
         return (
