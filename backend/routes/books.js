@@ -33,7 +33,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     if (!title || !description)
       return res.status(400).json({ message: 'Title and description are required' });
 
-    const image = req.file ? req.file.filename : null;
+    const image = req.file ? req.file.path : null;
 
     const book = new Book({
       title,
@@ -63,7 +63,7 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
     const { title, description } = req.body;
     if (title) book.title = title;
     if (description) book.description = description;
-    if (req.file) book.image = req.file.filename;
+    if (req.file) book.image = req.file.path;
 
     await book.save();
     res.json(book);

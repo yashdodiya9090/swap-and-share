@@ -323,7 +323,7 @@ const Home = () => {
 
 // Mini item card for homepage
 const ItemCard = ({ item, type }) => {
-  const imgSrc = item.image ? `${UPLOADS_URL}${item.image}` : null;
+  const imgSrc = item.image ? (item.image.startsWith('http') ? item.image : `${UPLOADS_URL}${item.image}`) : null;
   return (
     <div className="item-card">
       {imgSrc ? (

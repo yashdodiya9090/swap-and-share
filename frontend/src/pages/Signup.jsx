@@ -19,10 +19,20 @@ const Signup = () => {
 
   const handleChange = e => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    setError('');
+    // Clear mismatch error if user is typing in password or confirm fields
+    if (e.target.name === 'password' || e.target.name === 'confirm') {
+      setError('');
+    } else {
+      setError('');
+    }
   };
 
   const onGoogleLoginSuccess = async (credentialResponse) => {
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+      console.error('Error: VITE_GOOGLE_CLIENT_ID is missing in environment variables.');
+      setError('Google Auth is not configured correctly on the server.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {

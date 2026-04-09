@@ -77,7 +77,7 @@ const NewItems = () => {
         ) : (
           <div className="ni-grid">
             {items.map(item => {
-              const imgSrc = item.image ? `${UPLOADS_URL}${item.image}` : null;
+              const imgSrc = item.image ? (item.image.startsWith('http') ? item.image : `${UPLOADS_URL}${item.image}`) : null;
               return (
                 <div key={item._id} className="ni-card glass-card">
                   <div className="ni-card-img-wrap">
