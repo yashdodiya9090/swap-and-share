@@ -214,7 +214,15 @@ const ItemGrid = ({ items, user, onDelete, deleteLoading, navigate }) => {
     <div className="items-grid">
       {items.map(item => {
         const type = item._type;
-        const imgSrc = item.image ? (item.image.startsWith('http') ? item.image : `${UPLOADS_URL}${item.image}`) : null;
+        let imgSrc = null;
+        if (item.image) {
+          if (item.image.startsWith('http') || item.image.startsWith('data:')) {
+            imgSrc = item.image;
+          } else {
+            imgSrc = `${UPLOADS_URL}${item.image}`;
+          }
+        }
+
         const isOwner = user && user.id === item.owner;
 
         return (

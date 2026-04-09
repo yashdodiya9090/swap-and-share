@@ -97,7 +97,14 @@ const EditItem = () => {
     );
   }
 
-  const currentImg = preview || (existingImage ? (existingImage.startsWith('http') ? existingImage : `${UPLOADS_URL}${existingImage}`) : null);
+  let currentImg = preview;
+  if (!currentImg && existingImage) {
+    if (existingImage.startsWith('http') || existingImage.startsWith('data:')) {
+      currentImg = existingImage;
+    } else {
+      currentImg = `${UPLOADS_URL}${existingImage}`;
+    }
+  }
 
   return (
     <div className="edit-item-page">
