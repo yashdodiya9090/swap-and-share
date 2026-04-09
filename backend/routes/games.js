@@ -33,7 +33,11 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     if (!title || !description)
       return res.status(400).json({ message: 'Title and description are required' });
 
-    const image = req.file ? req.file.path : null;
+    let image = null;
+    if (req.file) {
+      const base64Image = req.file.buffer.toString('base64');
+      image = `data:${req.file.mimetype};base64,${base64Image}`;
+    }
 
     const game = new Game({
       title,
@@ -63,7 +67,10 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
     const { title, description } = req.body;
     if (title) game.title = title;
     if (description) game.description = description;
-    if (req.file) game.image = req.file.path;
+    if (req.file) {
+      const base64Image = req.file.buffer.toString('base64');
+      game.image = `data:${req.file.mimetype};base64,${base64Image}`;
+    }
 
     await game.save();
     res.json(game);

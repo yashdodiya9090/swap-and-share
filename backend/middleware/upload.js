@@ -1,25 +1,21 @@
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('cloudinary').v2;
-require('dotenv').config();
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Store file in memory to convert to base64
+const storage = multer.memoryStorage();
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'swapandshare_uploads', // The folder name in your Cloudinary account
-    allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'webp'],
-  },
-});
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const mimetype = allowedTypes.test(file.mimetype);
+  if (mimetype) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'));
+  }
+};
 
 const upload = multer({ 
   storage: storage,
+  fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
