@@ -13,11 +13,19 @@ import EditItem from './pages/EditItem';
 import HowItWorks from './pages/HowItWorks';
 
 
-// Protected route wrapper
+// Protected route wrapper - only for logged in users
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
+
+// Public route wrapper - only for guests (redirects logged-in users to home)
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
   return children;
 };
 
@@ -31,9 +39,16 @@ const AppRoutes = () => (
         <Route path="/products" element={<Products />} />
         <Route path="/new-items" element={<NewItems />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/login" element={<Login />} />
+        
+        {/* Guest only routes */}
+        <Route path="/login" element={
+          <PublicRoute><Login /></PublicRoute>
+        } />
+        <Route path="/signup" element={
+          <PublicRoute><Signup /></PublicRoute>
+        } />
 
-        <Route path="/signup" element={<Signup />} />
+        {/* Auth only routes */}
         <Route path="/add-item" element={
           <ProtectedRoute><AddItem /></ProtectedRoute>
         } />
