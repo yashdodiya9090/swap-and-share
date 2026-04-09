@@ -5,8 +5,8 @@ const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 
 const router = express.Router();
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '111471206822-i2b9431ll55cb31ho71ltd7g6o5209pp.apps.googleusercontent.com';
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 
 // POST /api/auth/signup
@@ -81,7 +81,7 @@ router.post('/google', async (req, res) => {
     
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: GOOGLE_CLIENT_ID,
     });
     
     const { name, email, sub: googleId } = ticket.getPayload();

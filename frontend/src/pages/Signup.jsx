@@ -28,11 +28,6 @@ const Signup = () => {
   };
 
   const onGoogleLoginSuccess = async (credentialResponse) => {
-    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-      console.error('Error: VITE_GOOGLE_CLIENT_ID is missing in environment variables.');
-      setError('Google Auth is not configured correctly on the server.');
-      return;
-    }
     setLoading(true);
     setError('');
     try {
