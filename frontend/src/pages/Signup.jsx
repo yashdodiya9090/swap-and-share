@@ -52,7 +52,7 @@ const Signup = () => {
   const handleCompleteGoogleSignup = async (e) => {
     e.preventDefault();
     if (!mobile) return setError('Mobile number is required');
-    
+
     setLoading(true);
     try {
       const { data } = await api.post('/api/auth/google', {
@@ -149,7 +149,7 @@ const Signup = () => {
             Join the <span>Community!</span>
           </h2>
           <p className="auth-left-desc">
-            Create your free account and start listing books and games within minutes. 
+            Create your free account and start listing books and games within minutes.
             No payment required — ever.
           </p>
           <div className="auth-features">
@@ -170,13 +170,13 @@ const Signup = () => {
           </div>
 
           <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-            <GoogleLogin 
-              onSuccess={onGoogleLoginSuccess} 
-              onError={() => setError('Google Signup Failed')} 
-              useOneTap 
-              theme="filled_blue" 
-              shape="pill" 
-              width="100%" 
+            <GoogleLogin
+              onSuccess={onGoogleLoginSuccess}
+              onError={() => setError('Google Signup Failed')}
+              useOneTap
+              theme="filled_blue"
+              shape="pill"
+              width="100%"
             />
           </div>
 

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://swap-and-share.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || '';
 const UPLOADS_URL = `${API_URL}/uploads/`;
 
 const api = axios.create({

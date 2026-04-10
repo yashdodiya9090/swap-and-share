@@ -1,5 +1,5 @@
 const express = require('express');
-const Book = require('../models/Book');
+const supabase = require('../config/supabase');
 const authMiddleware = require('../middleware/auth');
 const { upload, cloudinary } = require('../middleware/cloudinary');
 
@@ -8,7 +8,12 @@ const router = express.Router();
 // GET /api/books - Get all books
 router.get('/', async (req, res) => {
   try {
-    const books = await Book.find().sort({ createdAt: -1 });
+    const { data: books, error } = await supabase
+      .from('books')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
     res.json(books);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -18,8 +23,13 @@ router.get('/', async (req, res) => {
 // GET /api/books/:id - Get single book
 router.get('/:id', async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).json({ message: 'Book not found' });
+    const { data: book, error } = await supabase
+      .from('books')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !book) return res.status(404).json({ message: 'Book not found' });
     res.json(book);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -33,20 +43,23 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     if (!title || !description)
       return res.status(400).json({ message: 'Title and description are required' });
 
-    // Cloudinary gives us req.file.path as the secure URL
     const image = req.file ? req.file.path : null;
 
-    const book = new Book({
-      title,
-      description,
-      image,
-      owner: req.user.id,
-      ownerName: req.user.name,
-      ownerEmail: req.user.email,
-      ownerMobile: req.user.mobile || '',
-    });
+    const { data: book, error } = await supabase
+      .from('books')
+      .insert([{
+        title,
+        description,
+        image,
+        owner_id: req.user.id,
+        owner_name: req.user.name,
+        owner_email: req.user.email,
+        owner_mobile: req.user.mobile || '',
+      }])
+      .select()
+      .single();
 
-    await book.save();
+    if (error) throw error;
     res.status(201).json(book);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -56,26 +69,38 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
 // PUT /api/books/:id - Update book (protected)
 router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).json({ message: 'Book not found' });
-    if (book.owner.toString() !== req.user.id)
+    const { data: book, error: findError } = await supabase
+      .from('books')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (findError || !book) return res.status(404).json({ message: 'Book not found' });
+    if (book.owner_id !== req.user.id)
       return res.status(403).json({ message: 'Not authorized to edit this book' });
 
     const { title, description } = req.body;
-    if (title) book.title = title;
-    if (description) book.description = description;
+    const updates = {};
+    if (title) updates.title = title;
+    if (description) updates.description = description;
 
     if (req.file) {
-      // Delete old image from Cloudinary if it exists
       if (book.image) {
         const publicId = book.image.split('/').slice(-2).join('/').split('.')[0];
         await cloudinary.uploader.destroy(publicId).catch(() => {});
       }
-      book.image = req.file.path;
+      updates.image = req.file.path;
     }
 
-    await book.save();
-    res.json(book);
+    const { data: updatedBook, error: updateError } = await supabase
+      .from('books')
+      .update(updates)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+    res.json(updatedBook);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -84,18 +109,27 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
 // DELETE /api/books/:id - Delete book (protected)
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).json({ message: 'Book not found' });
-    if (book.owner.toString() !== req.user.id)
+    const { data: book, error: findError } = await supabase
+      .from('books')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (findError || !book) return res.status(404).json({ message: 'Book not found' });
+    if (book.owner_id !== req.user.id)
       return res.status(403).json({ message: 'Not authorized to delete this book' });
 
-    // Delete image from Cloudinary
     if (book.image) {
       const publicId = book.image.split('/').slice(-2).join('/').split('.')[0];
       await cloudinary.uploader.destroy(publicId).catch(() => {});
     }
 
-    await book.deleteOne();
+    const { error: deleteError } = await supabase
+      .from('books')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (deleteError) throw deleteError;
     res.json({ message: 'Book deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });

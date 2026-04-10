@@ -44,8 +44,8 @@ const Products = () => {
       await api.delete(`/api/${type}s/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (type === 'book') setBooks(prev => prev.filter(b => b._id !== id));
-      else setGames(prev => prev.filter(g => g._id !== id));
+      if (type === 'book') setBooks(prev => prev.filter(b => b.id !== id));
+      else setGames(prev => prev.filter(g => g.id !== id));
       showToast(`${type === 'book' ? 'Book' : 'Game'} deleted successfully!`);
     } catch {
       showToast('Failed to delete. Please try again.');
@@ -223,10 +223,10 @@ const ItemGrid = ({ items, user, onDelete, deleteLoading, navigate }) => {
           }
         }
 
-        const isOwner = user && user.id === item.owner;
+        const isOwner = user && user.id === item.owner_id;
 
         return (
-          <div key={item._id} className="item-card">
+          <div key={item.id} className="item-card">
             {imgSrc ? (
               <img src={imgSrc} alt={item.title} className="item-card-image" />
             ) : (
@@ -251,18 +251,18 @@ const ItemGrid = ({ items, user, onDelete, deleteLoading, navigate }) => {
                 <div className="item-card-actions">
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={() => navigate(`/edit-item/${type}/${item._id}`)}
-                    id={`edit-${item._id}`}
+                    onClick={() => navigate(`/edit-item/${type}/${item.id}`)}
+                    id={`edit-${item.id}`}
                   >
                     ✏️
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() => onDelete(item._id, type)}
-                    disabled={deleteLoading === item._id}
-                    id={`delete-${item._id}`}
+                    onClick={() => onDelete(item.id, type)}
+                    disabled={deleteLoading === item.id}
+                    id={`delete-${item.id}`}
                   >
-                    {deleteLoading === item._id ? '...' : '🗑️'}
+                    {deleteLoading === item.id ? '...' : '🗑️'}
                   </button>
                 </div>
               )}
@@ -274,7 +274,7 @@ const ItemGrid = ({ items, user, onDelete, deleteLoading, navigate }) => {
                 <button
                   className="contact-owner-btn"
                   onClick={() => setActiveContactItem(item)}
-                  id={`contact-${item._id}`}
+                  id={`contact-${item.id}`}
                 >
                   <span className="contact-icon">📬</span>
                   Contact Owner
@@ -312,7 +312,7 @@ const ItemGrid = ({ items, user, onDelete, deleteLoading, navigate }) => {
                     target="_blank"
                     rel="noreferrer"
                     className="contact-link contact-whatsapp"
-                    id={`whatsapp-${activeContactItem._id}`}
+                    id={`whatsapp-${activeContactItem.id}`}
                   >
                     <span className="contact-link-icon">💬</span>
                     <div className="contact-link-info">
@@ -328,7 +328,7 @@ const ItemGrid = ({ items, user, onDelete, deleteLoading, navigate }) => {
                   <a
                     href={`tel:${activeContactItem.ownerMobile}`}
                     className="contact-link contact-phone"
-                    id={`phone-${activeContactItem._id}`}
+                    id={`phone-${item.id}`}
                   >
                     <span className="contact-link-icon">📱</span>
                     <div className="contact-link-info">

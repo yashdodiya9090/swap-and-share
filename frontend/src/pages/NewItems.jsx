@@ -86,7 +86,7 @@ const NewItems = () => {
                 }
               }
               return (
-                <div key={item._id} className="ni-card glass-card">
+                <div key={item.id} className="ni-card glass-card">
                   <div className="ni-card-img-wrap">
                     {imgSrc ? (
                       <img src={imgSrc} alt={item.title} className="ni-card-img" />

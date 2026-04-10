@@ -23,7 +23,7 @@ const EditItem = () => {
       try {
         const { data } = await api.get(`/api/${type}s/${id}`);
         // Check ownership
-        if (data.owner !== user?.id) {
+        if (data.owner_id !== user?.id) {
           navigate('/products');
           return;
         }

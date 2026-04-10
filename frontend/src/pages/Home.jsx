@@ -125,7 +125,7 @@ const Home = () => {
             </div>
             <div className="items-grid">
               {featuredBooks.map(book => (
-                <ItemCard key={book._id} item={book} type="book" />
+                <ItemCard key={book.id} item={book} type="book" />
               ))}
             </div>
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>
@@ -145,7 +145,7 @@ const Home = () => {
             </div>
             <div className="items-grid">
               {featuredGames.map(game => (
-                <ItemCard key={game._id} item={game} type="game" />
+                <ItemCard key={game.id} item={game} type="game" />
               ))}
             </div>
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>

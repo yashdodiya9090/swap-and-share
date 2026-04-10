@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
@@ -8,39 +7,34 @@ const authRoutes = require('./routes/auth');
 const bookRoutes = require('./routes/books');
 const gameRoutes = require('./routes/games');
 const statsRoutes = require('./routes/stats');
-const emailRoutes = require('./routes/email');
 
 const app = express();
 
 // Middleware
-app.use(cors()); // Allow all origins for easier deployment
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded images
+// Serve uploaded images (Legacy support if any local uploads exist)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+// Serve static files from the frontend
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/stats', statsRoutes);
 
-// Health check
-app.get('/', (req, res) => {
-  res.json({ message: 'Swap and Share API is running!' });
+// Catch-all route for frontend (React Router)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
-// Connect MongoDB and start server
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected successfully');
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(`🚀 Server running on http://localhost:${process.env.PORT || 5000}`);
-    });
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+// Start server
+const port = process.env.PORT || 7860;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${port}`);
+  console.log('✅ Connected to Supabase backend layer');
+});
