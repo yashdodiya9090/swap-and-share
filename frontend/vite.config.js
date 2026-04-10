@@ -7,11 +7,11 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://swap-and-share.onrender.com',
+        target: 'http://127.0.0.1:7861',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'https://swap-and-share.onrender.com',
+        target: 'http://127.0.0.1:7861',
         changeOrigin: true,
       },
     },

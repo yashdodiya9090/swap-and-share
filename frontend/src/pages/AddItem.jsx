@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import { UploadButton } from '../utils/uploadthing';
+import "@uploadthing/react/styles.css";
 
 const AddItem = () => {
   const { token } = useAuth();
@@ -9,8 +11,7 @@ const AddItem = () => {
   const fileRef = useRef(null);
 
   const [form, setForm] = useState({ title: '', description: '', category: 'book' });
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -20,22 +21,8 @@ const AddItem = () => {
     setError('');
   };
 
-  const handleFile = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be under 5MB');
-      return;
-    }
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
-    setError('');
-  };
-
   const handleRemoveImage = () => {
-    setImage(null);
-    setPreview(null);
-    if (fileRef.current) fileRef.current.value = '';
+    setImageUrl(null);
   };
 
   const handleSubmit = async e => {
@@ -47,16 +34,17 @@ const AddItem = () => {
     setLoading(true);
     setError('');
     try {
-      const formData = new FormData();
-      formData.append('title', form.title.trim());
-      formData.append('description', form.description.trim());
-      if (image) formData.append('image', image);
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        image: imageUrl,
+      };
 
       const endpoint = form.category === 'book' ? '/api/books' : '/api/games';
-      await api.post(endpoint, formData, {
+      await api.post(endpoint, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
       setSuccess(`${form.category === 'book' ? 'Book' : 'Game'} added successfully! 🎉`);
@@ -162,22 +150,38 @@ const AddItem = () => {
               {/* Right: Image Upload */}
               <div className="add-image-col">
                 <label className="form-label">🖼️ Item Photo</label>
-                {!preview ? (
-                  <div className="upload-area" id="upload-area">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                      onChange={handleFile}
-                      ref={fileRef}
-                      id="item-image-input"
+                {!imageUrl ? (
+                  <div className="upload-area-ut" id="upload-area">
+                    <UploadButton
+                      endpoint="productImage"
+                      onClientUploadComplete={(res) => {
+                        setImageUrl(res[0].url);
+                        setError('');
+                      }}
+                      onUploadError={(error) => {
+                        setError(`Upload failed: ${error.message}`);
+                      }}
+                      content={{
+                        button({ ready }) {
+                          if (ready) return "📸 Upload Photo";
+                          return "Connecting...";
+                        }
+                      }}
+                      appearance={{
+                        button: {
+                          background: "var(--purple)",
+                          padding: "1rem 2rem",
+                          borderRadius: "var(--radius-lg)",
+                          width: "100%",
+                          fontSize: "1rem"
+                        }
+                      }}
                     />
-                    <div className="upload-icon">📷</div>
-                    <p className="upload-text">Click or drag to upload photo</p>
-                    <p className="upload-hint">JPEG, PNG, GIF, WebP — Max 5MB</p>
+                    <p className="upload-hint" style={{ marginTop: '1rem' }}>JPEG, PNG — Max 4MB</p>
                   </div>
                 ) : (
                   <div className="preview-wrap">
-                    <img src={preview} alt="Preview" className="image-preview" />
+                    <img src={imageUrl} alt="Preview" className="image-preview" />
                     <button
                       type="button"
                       className="btn btn-danger btn-sm remove-img-btn"

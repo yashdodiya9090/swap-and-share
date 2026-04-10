@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api, { UPLOADS_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { UploadButton } from '../utils/uploadthing';
+import "@uploadthing/react/styles.css";
 
 const EditItem = () => {
   const { type, id } = useParams(); // type: 'book' or 'game'
@@ -11,8 +13,7 @@ const EditItem = () => {
 
   const [form, setForm] = useState({ title: '', description: '' });
   const [existingImage, setExistingImage] = useState(null);
-  const [newImage, setNewImage] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [newImageUrl, setNewImageUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,21 +44,8 @@ const EditItem = () => {
     setError('');
   };
 
-  const handleFile = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be under 5MB');
-      return;
-    }
-    setNewImage(file);
-    setPreview(URL.createObjectURL(file));
-  };
-
   const handleRemoveNew = () => {
-    setNewImage(null);
-    setPreview(null);
-    if (fileRef.current) fileRef.current.value = '';
+    setNewImageUrl(null);
   };
 
   const handleSubmit = async e => {
@@ -69,15 +57,16 @@ const EditItem = () => {
     setSaving(true);
     setError('');
     try {
-      const formData = new FormData();
-      formData.append('title', form.title.trim());
-      formData.append('description', form.description.trim());
-      if (newImage) formData.append('image', newImage);
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        image: newImageUrl || existingImage,
+      };
 
-      await api.put(`/api/${type}s/${id}`, formData, {
+      await api.put(`/api/${type}s/${id}`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
       setSuccess('Item updated successfully! 🎉');
@@ -97,14 +86,7 @@ const EditItem = () => {
     );
   }
 
-  let currentImg = preview;
-  if (!currentImg && existingImage) {
-    if (existingImage.startsWith('http') || existingImage.startsWith('data:')) {
-      currentImg = existingImage;
-    } else {
-      currentImg = `${UPLOADS_URL}${existingImage}`;
-    }
-  }
+  let currentImg = newImageUrl || existingImage;
 
   return (
     <div className="edit-item-page">
@@ -190,36 +172,51 @@ const EditItem = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     <img src={currentImg} alt="Item" className="image-preview" />
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <label className="btn btn-secondary btn-sm change-img-btn" htmlFor="edit-image-input">
-                        🔄 Change Photo
-                      </label>
-                      {preview && (
+                      <UploadButton
+                        endpoint="productImage"
+                        onClientUploadComplete={(res) => {
+                          setNewImageUrl(res[0].url);
+                          setError('');
+                        }}
+                        onUploadError={(error) => {
+                          setError(`Upload failed: ${error.message}`);
+                        }}
+                        content={{
+                          button({ ready }) {
+                            if (ready) return "🔄 Change Photo";
+                            return "Connecting...";
+                          }
+                        }}
+                        appearance={{
+                          button: {
+                            background: "var(--purple-dim)",
+                            color: "var(--purple-light)",
+                            padding: "0.5rem 1rem",
+                            fontSize: "0.85rem",
+                            borderRadius: "var(--radius-md)",
+                            border: "1px solid var(--purple-light)"
+                          }
+                        }}
+                      />
+                      {newImageUrl && (
                         <button type="button" className="btn btn-danger btn-sm" onClick={handleRemoveNew}>
                           ✕ Revert
                         </button>
                       )}
                     </div>
-                    <input
-                      id="edit-image-input"
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                      onChange={handleFile}
-                      ref={fileRef}
-                      style={{ display: 'none' }}
-                    />
                   </div>
                 ) : (
-                  <div className="upload-area">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                      onChange={handleFile}
-                      ref={fileRef}
-                      id="edit-image-input"
+                  <div className="upload-area-ut">
+                    <UploadButton
+                      endpoint="productImage"
+                      onClientUploadComplete={(res) => {
+                        setNewImageUrl(res[0].url);
+                        setError('');
+                      }}
+                      onUploadError={(error) => {
+                        setError(`Upload failed: ${error.message}`);
+                      }}
                     />
-                    <div className="upload-icon">📷</div>
-                    <p className="upload-text">Click to upload a photo</p>
-                    <p className="upload-hint">JPEG, PNG, GIF, WebP — Max 5MB</p>
                   </div>
                 )}
               </div>
